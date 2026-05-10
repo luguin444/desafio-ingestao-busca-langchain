@@ -6,38 +6,16 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_postgres import PGVector
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from providers_helper import EMBEDDING_PROVIDER, get_embedding_model
+
 load_dotenv()
 
 PDF_PATH = os.getenv("PDF_PATH")
 DATABASE_URL = os.getenv("DATABASE_URL")
 COLLECTION_NAME = os.getenv("PG_VECTOR_COLLECTION_NAME")
-EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "openai").lower()
 
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 150
-
-
-def get_embedding_model():
-    if EMBEDDING_PROVIDER == "openai":
-        from langchain_openai import OpenAIEmbeddings
-
-        return OpenAIEmbeddings(
-            model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
-        )
-
-    if EMBEDDING_PROVIDER in ("google", "gemini"):
-        from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
-        # Truncate to 768 dims via MRL — much smaller storage/faster search with minimal quality loss.
-        return GoogleGenerativeAIEmbeddings(
-            model=os.getenv("GOOGLE_EMBEDDING_MODEL", "models/embedding-001"),
-            output_dimensionality=768,
-        )
-
-    raise ValueError(
-        f"invalid EMBEDDING_PROVIDER: {EMBEDDING_PROVIDER!r}. "
-        "Use 'openai' or 'google'."
-    )
 
 
 def ingest_pdf():
